@@ -143,6 +143,7 @@ Heli.Screen = function (params) {
         var toAdd, len, rand,
             last = _terrain[Math.round(_terrain.length-1)];
 
+        /*
         if (_randomBlock === null) { 
             rand = Math.floor(Math.random() * 50);
             if (params.tick() % rand === 0) {
@@ -155,6 +156,7 @@ Heli.Screen = function (params) {
                 _randomBlock = null;
             }
         }
+	*/
 
         if (changeDir === 0) {
             _direction = (_direction === Heli.Dir.DOWN) 
