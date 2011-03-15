@@ -280,6 +280,9 @@ Heli.Screen = function (params) {
         "width"       : width,
         "height"      : height,
         "collided"    : collided,
+        "numLines"    : _numLines,
+        "lineWidth"   : _lineWidth,
+        "lineHeight"  : _lineHeight,
         "terrain"     : function() {
             return _terrain;
         },
@@ -409,7 +412,11 @@ var HELICOPTER = (function() {
         user        = null,
         pos         = 0,
         died        = 0,
-        _tick       = 0;
+        _tick       = 0,
+       _visibilityStart = 0,
+       _visibilityDepth = 100,
+       _targetAltitude = 50,
+       _showHUD = false;
 
     function keyDown(e) { 
 
@@ -503,6 +510,7 @@ var HELICOPTER = (function() {
                 user.finished();
             }
             screen.drawUser(ctx, pos, user.trail(), true);
+            drawHUD();
             
         } else if (state === Heli.State.DYING && (_tick - died) > (Heli.FPS / 1)) {
             dialog("Press enter to start again.");
@@ -533,6 +541,57 @@ var HELICOPTER = (function() {
             obstacle: screen.obstacle() // Data on the obstacle (position and height)
         }
     }
+
+    function drawHUD() {
+        if (_showHUD === true) {
+            drawFieldOfVision();
+            updateStats();
+        }
+    }
+
+    function updateStats() {
+        var statsBox = document.getElementById('stats');
+        if (statsBox == null) {
+            var statsBox = document.createElement('div');
+            statsBox.id = "stats";
+            document.getElementById('helicopter').appendChild(statsBox);
+        }
+
+        statsData = '<ul><li class="label">Current Altitude:</li><li class="stats">' + pos.toFixed(2) + '</li>';
+        statsData += '<li class="label">Target Altitude:</li><li class="stats">' + _targetAltitude.toFixed(2) + '</li>';
+        statsData += '<li class="label">Momentum:</li><li class="stats">' + momentum.toFixed(2) + '</li>';
+        statsData += '<li class="label">Game State:</li><li class="stats">' + state + '</li></ul>';
+        statsBox.innerHTML = statsData;
+    }
+
+    function drawFieldOfVision() {
+        var crossHairSize = 12;
+        var visible = {
+            "start"    : (_visibilityStart*screen.lineWidth),
+            "depth"    : (_visibilityDepth*screen.lineWidth),
+            "midPoint" : {
+                "x":0,
+                "y":0
+            }
+        }
+
+        visible.midPoint.x = visible.start + ((visible.depth - visible.start)/2);
+        visible.midPoint.y = (100-_targetAltitude)*screen.lineHeight;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0,0,visible.start,(100*screen.lineHeight));
+        ctx.fillRect(visible.depth,0,(screen.numLines*screen.lineWidth),(100*screen.lineHeight));
+
+        ctx.lineWidth = '1';
+        ctx.strokeStyle = 'red';
+        ctx.moveTo(visible.midPoint.x - crossHairSize,visible.midPoint.y);
+        ctx.lineTo(visible.midPoint.x + crossHairSize,visible.midPoint.y);
+        ctx.moveTo(visible.midPoint.x,(visible.midPoint.y)-crossHairSize);
+        ctx.lineTo(visible.midPoint.x,(visible.midPoint.y)+crossHairSize);
+        ctx.stroke();
+        ctx.strokeRect(visible.midPoint.x - (crossHairSize-5),visible.midPoint.y - (crossHairSize-5),(crossHairSize-5)*2,(crossHairSize-5)*2);
+    }
+
     function drawScore() { 
 
         ctx.font = "12px silkscreen";
@@ -647,7 +706,13 @@ var HELICOPTER = (function() {
     
     return {
         "init" : init,
-        "gameData": gameData
+        "gameData": gameData,
+        "updateVisualCue": function(visibilityStart, visibilityDepth, targetAltitude) {
+            _visibilityStart = visibilityStart;
+            _visibilityDepth = visibilityDepth;
+            _targetAltitude = targetAltitude;
+            _showHUD = true;
+        }
     };
 }());
 
