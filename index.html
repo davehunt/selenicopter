@@ -31,6 +31,7 @@
   <script>
 
     var families = [ "SilkScreenBold", "SilkScreen"];
+    var myHelicopter;
 
     var INIT = (function (m, HELICOPTER, families) {
 
@@ -41,7 +42,8 @@
       function loaded() { 
         if (m.canvas && m.localstorage && m.audio && 
             (m.audio.ogg || m.audio.mp3)) {
-          HELICOPTER.init(helicopter, "./");
+          myHelicopter = HELICOPTER;
+          myHelicopter.init(helicopter, "./");
         } else {    
           el.innerHTML = "Sorry, needs a decent browser<br /><small>" + 
             "(firefox 3.6+, Chrome 4+, Opera 10+ and Safari 4+)</small>";

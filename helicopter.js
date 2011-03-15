@@ -4,7 +4,7 @@
 var Heli = {};
 
 Heli.Consts = [ 
-  {name: "State", consts: ["WAITING", "PAUSED", "PLAYING", "DYING"]},
+  {name: "State", consts: ["LOADING", "WAITING", "PAUSED", "PLAYING", "DYING"]},
   {name: "Dir",   consts: ["UP", "DOWN"]}
 ];
 
@@ -75,7 +75,10 @@ Heli.User = function (params) {
         "trail":trail,
         "distance":distance,
         "finished":finished,
-        "bestDistance":bestDistance
+        "bestDistance":bestDistance,
+        "position":function() {
+	    return position;
+	}
     };    
 };
 
@@ -276,7 +279,25 @@ Heli.Screen = function (params) {
         "init"        : init,
         "width"       : width,
         "height"      : height,
-        "collided"    : collided
+        "collided"    : collided,
+        "terrain"     : function() {
+            return _terrain;
+        },
+        "obstacle"    :  function() {
+            if (_randomBlock === null) {
+                return {
+                    "column" : 0,
+                    "top"    : 0,
+                    "height" : 0
+                }
+            } else {
+                return {
+                    "column" : _randomBlock,
+                    "top"    : _blockY,
+                    "height" : _blockHeight
+                }
+            }
+        }
     };
 };
 
@@ -380,7 +401,7 @@ var HELICOPTER = (function() {
         }     
     })(Heli, Heli.Consts);        
     
-    var state       = Heli.State.WAITING,
+    var state       = Heli.State.LOADING,
         thrustersOn = false,
         timer       = null,
         audio       = null,
@@ -388,7 +409,7 @@ var HELICOPTER = (function() {
         user        = null,
         pos         = 0,
         died        = 0,
-       _tick        = 0;
+        _tick       = 0;
 
     function keyDown(e) { 
 
@@ -501,7 +522,17 @@ var HELICOPTER = (function() {
         drawScore();
     };
                       
+    function gameData() {
 
+        return {
+            state: state,
+            terrain: screen.terrain(), // Data on the terrain (roof and floor)
+            distance: user.distance(),
+            position: pos, // Height of the helicopter from ground
+            momentum: momentum,
+            obstacle: screen.obstacle() // Data on the obstacle (position and height)
+        }
+    }
     function drawScore() { 
 
         ctx.font = "12px silkscreen";
@@ -609,11 +640,14 @@ var HELICOPTER = (function() {
         document.addEventListener("mousedown", mouseDown, true);
         document.addEventListener("mouseup", mouseUp, true); 
 
+        state = Heli.State.WAITING;
+
         startScreen();
     };
     
     return {
-        "init" : init
+        "init" : init,
+        "gameData": gameData
     };
 }());
 
